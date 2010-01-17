@@ -18,31 +18,40 @@ my $config = q~
 Log::Log4perl->init( \$config );
 my $logger = get_logger();
 
-#my $url = "http://podcast.wdr.de/quarks.xml";
-#my $url = "http://www.pofacs.de/rss/itunes.xml";
 my $folder = "/home/christian/"; #folder where the podcast lay, musst end with /
 my @urls = qw( 
 http://www.pofacs.de/rss/itunes.xml
 );
 
-foreach my $url (@urls) {
-	my $content = get $url
-		or $logger->warn("Could not connect to $url\n");
+$logger->info("Start pepol\n");
+
+open CONFIG, "urls.conf";
+
+while (<CONFIG>) {
+	chomp;
+	next if(/^\#+/);
+	my ($url, $lang) = split /;/, $_;
+	my $content = get $url;
+	unless ( defined($content)){
+		$logger->error("Could not connect to $url\n");
+		next;
+	}
 	my $rss = XML::RSS->new;
 	$rss->parse($content);
 	my $title = $rss->{channel}->{title};
 	foreach my $item (@{$rss->{'items'}}) {
 		my $podcast = $item->{'enclosure'}->{'url'};
 		if($podcast =~ /\w+\.\w+$/) {
-			my $file = $folder.$title."/".$&;
-			print $file."\n";
-			if (-e $file) {
-				$logger->info("File exist: $&\n");
+			my $file = $lang."/".$title."/".$&;
+			if (-e $folder.$file) {
+				$logger->debug("File exist: $file\n");
 			} else {
-				getstore($podcast, $file);
-				#print "Need download\n";
+				$logger->info("Start Download: $file\n");
+				getstore($podcast, $folder.$file)
+					or $logger->error("Failed Download: $file\n");
+				$logger->info("Finished Download: $file\n");
 			}
 		}
 	}
 }
-
+$logger->info("Stop pepol\n");
