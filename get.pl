@@ -41,9 +41,9 @@ while (<URLS>) {
 		my $podcast = $item->{'enclosure'}->{'url'};
 		if($podcast =~ /\w+\.\w+$/) {
 			my $file =File::Spec->catfile($title, $&);
-			$file = File::Spec->catfile($lang, $file) if ($lang gt "");
+			$file = File::Spec->catfile($lang, $file) if ( defined($lang) and $lang gt "");
 			$file = File::Spec->catfile($folder, $file);
-			print $file."\n";
+			#print $file."\n";
 			if (-e $file) {
 				$logger->debug("File exist: $file\n");
 			} else {
