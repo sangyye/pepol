@@ -3,6 +3,7 @@ use warnings;
 use strict;
 use LWP::Simple;
 use XML::RSS;
+use File::Spec;
 use Log::Log4perl qw(get_logger);
 #Perl program for parsing a podcast and download the pods
 
@@ -18,16 +19,13 @@ my $config = q~
 Log::Log4perl->init( \$config );
 my $logger = get_logger();
 
-my $folder = "/home/christian/"; #folder where the podcast lay, musst end with /
-my @urls = qw( 
-http://www.pofacs.de/rss/itunes.xml
-);
+my $folder = "/home/christian"; #folder where the podcast lay
 
 $logger->info("Start pepol\n");
 
-open CONFIG, "urls.conf";
+open URLS, "urls.conf";
 
-while (<CONFIG>) {
+while (<URLS>) {
 	chomp;
 	next if(/^\#+/);
 	my ($url, $lang) = split /;/, $_;
@@ -42,12 +40,15 @@ while (<CONFIG>) {
 	foreach my $item (@{$rss->{'items'}}) {
 		my $podcast = $item->{'enclosure'}->{'url'};
 		if($podcast =~ /\w+\.\w+$/) {
-			my $file = $lang."/".$title."/".$&;
-			if (-e $folder.$file) {
+			my $file =File::Spec->catfile($title, $&);
+			$file = File::Spec->catfile($lang, $file) if ($lang gt "");
+			$file = File::Spec->catfile($folder, $file);
+			print $file."\n";
+			if (-e $file) {
 				$logger->debug("File exist: $file\n");
 			} else {
 				$logger->info("Start Download: $file\n");
-				getstore($podcast, $folder.$file)
+				getstore($podcast, $file)
 					or $logger->error("Failed Download: $file\n");
 				$logger->info("Finished Download: $file\n");
 			}
