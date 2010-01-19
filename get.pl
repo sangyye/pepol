@@ -4,6 +4,7 @@ use strict;
 use LWP::Simple;
 use XML::RSS;
 use File::Spec;
+use YAML qw(LoadFile);
 use Log::Log4perl qw(get_logger);
 #Perl program for parsing a podcast and download the pods
 
@@ -19,13 +20,12 @@ my $config = q~
 Log::Log4perl->init( \$config );
 my $logger = get_logger();
 
-my $folder = "/home/christian"; #folder where the podcast lay
-
 $logger->info("Start pepol\n");
 
-open URLS, "urls.conf";
+my ($folder, $urls) = YAML::LoadFile("pepol.conf");
+chomp $folder;
 
-while (<URLS>) {
+foreach (@$urls) {
 	chomp;
 	next if(/^\#+/);
 	my ($url, $lang) = split /;/, $_;
