@@ -7,6 +7,9 @@ use File::Spec;
 use YAML qw(LoadFile);
 use Log::Log4perl qw(get_logger);
 #Perl program for parsing a podcast and download the pods
+my ($folder, $logconfig, $urls) = YAML::LoadFile("pepol.conf")
+	or die "Could not load Config";
+chomp $folder;
 
 #configuration of the logging
 my $config = q~
@@ -21,9 +24,6 @@ Log::Log4perl->init( \$config );
 my $logger = get_logger();
 
 $logger->info("Start pepol\n");
-
-my ($folder, $urls) = YAML::LoadFile("pepol.conf");
-chomp $folder;
 
 foreach (@$urls) {
 	chomp;
