@@ -10,12 +10,13 @@ use Log::Log4perl qw(get_logger);
 my ($folder, $logconfig, $urls) = YAML::LoadFile("pepol.conf")
 	or die "Could not load Config";
 chomp $folder;
+chomp $logconfig;
 
 #configuration of the logging
 my $config = q~
 	log4perl.logger				= INFO, LogFile
 	log4perl.appender.LogFile		= Log::Log4perl::Appender::File
-	log4perl.appender.LogFile.filename	= pepol.log
+	log4perl.appender.LogFile.filename	= ~.$logconfig.q~
 	log4perl.appender.LogFile.layout	= Log::Log4perl::Layout::PatternLayout
 	log4perl.appender.LogFile.layout.ConversionPattern = [%d] [%p] - %m
 ~;
@@ -30,12 +31,12 @@ foreach (@$urls) {
 	next if(/^\#+/);
 	my ($url, $lang) = split /;/, $_;
 	my $content = get $url;
-	unless ( defined($content)){
-		$logger->error("Could not connect to $url\n");
-		next;
-	}
+	unless (defined($content)){
+		$logger->error("Could not connect to $url\n"); 
+		next;}
 	my $rss = XML::RSS->new;
 	$rss->parse($content);
+	my $count = 0;
 	my $title = $rss->{channel}->{title};
 	foreach my $item (@{$rss->{'items'}}) {
 		my $podcast = $item->{'enclosure'}->{'url'};
@@ -51,8 +52,10 @@ foreach (@$urls) {
 				getstore($podcast, $file)
 					or $logger->error("Failed Download: $file\n");
 				$logger->info("Finished Download: $file\n");
+				$count++;
 			}
 		}
 	}
+	$logger->info($rss->{channel}->{title}.": ".$count." File(s) downloaded.\n");
 }
 $logger->info("Stop pepol\n");
