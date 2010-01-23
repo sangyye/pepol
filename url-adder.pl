@@ -61,19 +61,25 @@ if (defined @ARGV){
 		or &cmd_end("Need a config file");
 }
 
-my ($folder, $logconfig, $urls) = YAML::LoadFile($conf_file);
-
-chomp $folder;
-chomp $logconfig;
-
-$folder_in->insert(0, $folder);
-$logfile_in->insert(0, $logconfig);
-
-foreach (@$urls) {
-   $box->insert('end', $_);
-   }
+&load_file($conf_file);
 
 MainLoop;
+
+#some functions
+sub load_file {
+	my $confile = shift;
+	my ($folder, $logconfig, $urls) = YAML::LoadFile($confile);
+
+	chomp $folder;
+	chomp $logconfig;
+
+	$folder_in->insert(0, $folder);
+	$logfile_in->insert(0, $logconfig);
+
+	foreach (@$urls) {
+   	$box->insert('end', $_);
+   	}	
+}
 
 sub cmd_end {
 	my $anwser = shift;
