@@ -30,6 +30,7 @@ my $bt_add = $main->Button("-text" => "Add",
                                 "-height" => "1",
                                 "-width"  => "4",
                                 "-command" =>  \&eingabe_bearbeiten);
+
 my $bt_remove = $main->Button("-text" => "Remove",
 				"-height" => "1",
 				"-width" => "4",
@@ -40,11 +41,10 @@ my $bt_save = $main->Button("-text" => "Save",
 				"-width" => "4",
 				"-command" => \&save_file);
 
-my $bt_end = $main->Button("-text" => "End",
+my $bt_end = $main->Button("-text" => "Exit",
                                  "-height" => "1",
                                  "-width"  => "4",
                                  "-command" => sub{ exit;});
-
 
 $bt_add->pack(-side => 'left');
 $bt_remove->pack(-side => 'left');
@@ -53,7 +53,8 @@ $bt_save->pack(-side =>  'right');
 
 #program logik
 
-my $conf_file = shift @ARGV;
+my $conf_file = shift @ARGV
+	or die "Need a config file\n";
 
 my ($folder, $logconfig, $urls) = YAML::LoadFile($conf_file);
 
