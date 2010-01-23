@@ -57,7 +57,7 @@ my $conf_file = '';
 if (defined @ARGV){
 	$conf_file = shift;
 } else {
-	$conf_file = $main->FBox()->Show
+	$conf_file = $main->FBox(-filter => '*.conf')->Show
 		or &cmd_end("Need a config file");
 }
 
