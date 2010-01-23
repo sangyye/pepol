@@ -1,21 +1,25 @@
-#!/usr/bin/perl -w
-
+#!/usr/bin/perl
+use warnings;
 use strict;
 use Tk;
 use YAML qw(LoadFile DumpFile);
 
-my $conf_file = shift @ARGV;
-
-my ($folder, $logconfig, $urls) = YAML::LoadFile($conf_file);
+#Grafische Oberfläche generieren
 
 my $main = MainWindow->new(-title => "Pepol URL-Edit");
+my $input_frame = $main->Frame();
+$input_frame->Label("-text" => "Podcasts:")->pack(-side => 'left');
+my $folder_in = $input_frame->Entry(-width => 40);
+$folder_in->pack(-side => 'left');
+my $input_frame2 = $main->Frame();
+$input_frame2->Label("-text" => "Logfile:")->pack(-side => 'left');
+my $logfile_in = $input_frame2->Entry(-width => 38);
+$logfile_in->pack(-side => 'left');
+$input_frame->pack(-side => 'top');
+$input_frame2->pack(-side => 'top');
+
 my $frame = $main->Frame(-width => 50, -height => 10);
 my $box = $frame->Listbox(-width => 50, -height => 10);
-
-foreach (@$urls) {
-   $box->insert('end', $_);
-   }
-
 my $scroll = $frame->Scrollbar(-command => ['yview', $box]);
 $box->configure(-yscrollcommand => ['set', $scroll]);
 $box->pack(-side => 'left', -fill => 'both', -expand => 1);
@@ -47,11 +51,27 @@ $bt_remove->pack(-side => 'left');
 $bt_end->pack(-side => 'right');
 $bt_save->pack(-side =>  'right');
 
+#program logik
+
+my $conf_file = shift @ARGV;
+
+my ($folder, $logconfig, $urls) = YAML::LoadFile($conf_file);
+
+chomp $folder;
+chomp $logconfig;
+
+$folder_in->insert(0, $folder);
+$logfile_in->insert(0, $logconfig);
+
+foreach (@$urls) {
+   $box->insert('end', $_);
+   }
+
 MainLoop;
 
 sub save_file {
 	my @elements = $box->get(0, 'end');
-	YAML::DumpFile($conf_file,($folder, $logconfig, \@elements));
+	YAML::DumpFile($conf_file,($folder_in->get(), $logfile_in->get(), \@elements));
 	$main->messageBox(-message=>"successfull Saved!");
 }
 
