@@ -2,6 +2,7 @@
 use warnings;
 use strict;
 use Tk;
+use Tk::FBox;
 use YAML qw(LoadFile DumpFile);
 
 #Grafische Oberfläche generieren
@@ -52,9 +53,13 @@ $bt_end->pack(-side => 'right');
 $bt_save->pack(-side =>  'right');
 
 #program logik
-
-my $conf_file = shift @ARGV
-	or die "Need a config file\n";
+my $conf_file = '';
+if (defined @ARGV){
+	$conf_file = shift;
+} else {
+	$conf_file = $main->FBox()->Show
+		or &cmd_end("Need a config file");
+}
 
 my ($folder, $logconfig, $urls) = YAML::LoadFile($conf_file);
 
@@ -69,6 +74,12 @@ foreach (@$urls) {
    }
 
 MainLoop;
+
+sub cmd_end {
+	my $anwser = shift;
+	$main->messageBox(-message=>$anwser);
+	exit;
+}
 
 sub save_file {
 	my @elements = $box->get(0, 'end');
