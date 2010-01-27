@@ -68,15 +68,15 @@ MainLoop;
 #some functions
 sub load_file {
 	my $confile = shift;
-	my ($folder, $logconfig, $urls) = YAML::LoadFile($confile);
+	my $yaml = YAML::LoadFile($confile);
 
-	chomp $folder;
-	chomp $logconfig;
+	#chomp $folder;
+	#chomp $logconfig;
 
-	$folder_in->insert(0, $folder);
-	$logfile_in->insert(0, $logconfig);
+	$folder_in->insert(0, $yaml->{dir});
+	$logfile_in->insert(0, $yaml->{logfile});
 
-	foreach (@$urls) {
+	foreach (@{$yaml->{urls}}) {
    	$box->insert('end', $_);
    	}	
 }
@@ -89,7 +89,11 @@ sub cmd_end {
 
 sub save_file {
 	my @elements = $box->get(0, 'end');
-	YAML::DumpFile($conf_file,($folder_in->get(), $logfile_in->get(), \@elements));
+	my $hash = {};
+	$hash->{'dir'} = $folder_in->get();
+	$hash->{'logfile'} = $logfile_in->get();
+	$hash->{'urls'} = \@elements;
+	YAML::DumpFile($conf_file, $hash);
 	$main->messageBox(-message=>"successfull Saved!");
 }
 

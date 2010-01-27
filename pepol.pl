@@ -7,16 +7,14 @@ use File::Spec;
 use YAML qw(LoadFile);
 use Log::Log4perl qw(get_logger);
 #Perl program for parsing a podcast and download the pods
-my ($folder, $logconfig, $urls) = YAML::LoadFile("pepol.conf")
+my ($yaml) = YAML::LoadFile("pepol.conf")
 	or die "Could not load Config";
-chomp $folder;
-chomp $logconfig;
 
 #configuration of the logging
 my $config = q~
 	log4perl.logger				= INFO, LogFile
 	log4perl.appender.LogFile		= Log::Log4perl::Appender::File
-	log4perl.appender.LogFile.filename	= ~.$logconfig.q~
+	log4perl.appender.LogFile.filename	= ~.$yaml->{'logfile'}.q~
 	log4perl.appender.LogFile.layout	= Log::Log4perl::Layout::PatternLayout
 	log4perl.appender.LogFile.layout.ConversionPattern = [%d] [%p] - %m
 ~;
@@ -26,7 +24,7 @@ my $logger = get_logger();
 
 $logger->info("Start pepol\n");
 
-foreach (@$urls) {
+foreach (@{$yaml->{'urls'}}) {
 	chomp;
 	next if(/^\#+/);
 	my ($url, $lang) = split /;/, $_;
@@ -43,7 +41,7 @@ foreach (@$urls) {
 		if($podcast =~ /\w+\.\w+$/) {
 			my $file =File::Spec->catfile($title, $&);
 			$file = File::Spec->catfile($lang, $file) if ( defined($lang) and $lang gt "");
-			$file = File::Spec->catfile($folder, $file);
+			$file = File::Spec->catfile($yaml->{'dir'}, $file);
 			#print $file."\n";
 			if (-e $file) {
 				$logger->debug("File exist: $file\n");
