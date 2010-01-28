@@ -5,6 +5,7 @@ use Tk;
 use Tk::FBox;
 use YAML qw(LoadFile DumpFile);
 
+local $YAML::UseHeader = 0;
 #Grafische Oberfläche generieren
 
 my $main = MainWindow->new(-title => "Pepol URL-Edit");

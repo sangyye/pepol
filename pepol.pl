@@ -24,6 +24,9 @@ my $logger = get_logger();
 
 $logger->info("Start pepol\n");
 
+my $file = "";
+$SIG{INT} = \&catch;
+
 foreach (@{$yaml->{'urls'}}) {
 	chomp;
 	next if(/^\#+/);
@@ -39,7 +42,9 @@ foreach (@{$yaml->{'urls'}}) {
 	foreach my $item (@{$rss->{'items'}}) {
 		my $podcast = $item->{'enclosure'}->{'url'};
 		if($podcast =~ /\w+\.\w+$/) {
-			my $file =File::Spec->catfile($title, $&);
+			$file = File::Spec->catfile($title, $&);
+			my $folder = File::Spec->catfile($yaml->{'dir'}, $title);
+			mkdir($folder) unless (-e $folder);
 			$file = File::Spec->catfile($lang, $file) if ( defined($lang) and $lang gt "");
 			$file = File::Spec->catfile($yaml->{'dir'}, $file);
 			#print $file."\n";
@@ -50,6 +55,7 @@ foreach (@{$yaml->{'urls'}}) {
 				getstore($podcast, $file)
 					or $logger->error("Failed Download: $file\n");
 				$logger->info("Finished Download: $file\n");
+				$file = "";
 				$count++;
 			}
 		}
@@ -57,3 +63,12 @@ foreach (@{$yaml->{'urls'}}) {
 	$logger->info($rss->{channel}->{title}.": ".$count." File(s) downloaded.\n");
 }
 $logger->info("Stop pepol\n");
+
+sub catch {
+	$SIG{INT} = \&catch;
+	my $warn = "Interrupt pepol\n";
+	unlink($file);
+	$logger->warn($warn);
+	print $warn;
+	exit;
+}
