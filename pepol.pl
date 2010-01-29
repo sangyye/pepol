@@ -42,11 +42,15 @@ foreach (@{$yaml->{'urls'}}) {
 	foreach my $item (@{$rss->{'items'}}) {
 		my $podcast = $item->{'enclosure'}->{'url'};
 		if($podcast =~ /\w+\.\w+$/) {
-			$file = File::Spec->catfile($title, $&);
-			my $folder = File::Spec->catfile($yaml->{'dir'}, $title);
-			mkdir($folder) unless (-e $folder);
-			$file = File::Spec->catfile($lang, $file) if ( defined($lang) and $lang gt "");
-			$file = File::Spec->catfile($yaml->{'dir'}, $file);
+			if (defined($lang) and $lang gt "") {
+				$file = File::Spec->catfile($yaml->{'dir'}, $lang);
+				mkdir($file) unless (-e $file);
+				$file = File::Spec->catfile($file, $title);
+			} else {
+				$file = File::Spec->catfile($yaml->{'dir'}, $title);
+			}
+			mkdir($file) unless (-e $file);
+			$file = File::Spec->catfile($file, $&);
 			#print $file."\n";
 			if (-e $file) {
 				$logger->debug("File exist: $file\n");
