@@ -92,12 +92,12 @@ sub cmd_end {
 }
 
 sub edit_config {
-	my $popup=$main->DialogBox(-title=>"Edit Config", -buttons=>["OK"], -command=>sub{$folder_pod = $popup_in1->get();$file_config=$popup_in2->get();});
+	my $popup=$main->DialogBox(-title=>"Edit Config", -buttons=>["OK","Cancel"], -command=>sub{my $i= shift; if($i eq "OK"){$folder_pod = $popup_in1->get();$file_config=$popup_in2->get();}});
         $popup->add("Label", -text=>"Podcast:")->grid(-row =>0, -column=>0);
-	$popup_in1 =$popup->add("Entry")->grid(-row =>0, -column=>1);
+	$popup_in1 =$popup->add("Entry", -width=>'25')->grid(-row =>0, -column=>1);
 	$popup_in1->insert('0',$folder_pod);
 	$popup->add("Label", -text=>"Log-File:")->grid(-row =>1, -column=>0);
-	$popup_in2 = $popup->add("Entry")->grid(-row =>1, -column=>1);
+	$popup_in2 = $popup->add("Entry", -width=>'25')->grid(-row =>1, -column=>1);
 	$popup_in2->insert('0', $file_config);
         $popup->Show;
 }
