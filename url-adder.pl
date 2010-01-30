@@ -3,23 +3,35 @@ use warnings;
 use strict;
 use Tk;
 use Tk::FBox;
+require Tk::Dialog;
 use YAML qw(LoadFile DumpFile);
 
 local $YAML::UseHeader = 0;
 #Grafische Oberfläche generieren
 
-my $main = MainWindow->new(-title => "Pepol URL-Edit");
-my $input_frame = $main->Frame();
-$input_frame->Label("-text" => "Podcasts:")->pack(-side => 'left');
-my $folder_in = $input_frame->Entry(-width => 40);
-$folder_in->pack(-side => 'left');
-my $input_frame2 = $main->Frame();
-$input_frame2->Label("-text" => "Logfile:")->pack(-side => 'left');
-my $logfile_in = $input_frame2->Entry(-width => 38);
-$logfile_in->pack(-side => 'left');
-$input_frame->pack(-side => 'top');
-$input_frame2->pack(-side => 'top');
+my $main = MainWindow->new(-title => "Pepol URL-Adder");
+my $menu_bar = $main->Frame(-relief => 'groove', -borderwidth=>1);
+my $menu_fb = $menu_bar->Menubutton(-text => 'File');
+my $menu_hb = $menu_bar->Menubutton(-text => 'Help');
 
+#menu file
+$menu_fb->command(-label=>'Load Config', -command=> sub{&load_file($main->FBox(-filter => '*.conf')->Show)});
+$menu_fb->command(-label=>'Save', -command=> sub{&save_file});
+$menu_fb->command(-label=>'Edit Config', -command=> sub{&edit_config});
+$menu_fb->separator();
+$menu_fb->command(-label=>'Exit', -command=> sub{$main->destroy});
+$menu_fb->separator();
+#menu_help
+$menu_hb->command(-label=>'About', -command=>\&about_txt );
+$menu_hb->command(-label=>'Help', -command=>\&help_txt);
+$menu_hb->separator();
+
+$menu_fb->pack(-side => 'left');
+$menu_hb->pack(-side => 'right');
+$menu_bar->pack(-side => 'top',-fill=>'x');
+my $title_frame= $main->Frame();
+$title_frame->Label(-text => "Urls")->pack();
+$title_frame->pack(-side=>'top');
 my $frame = $main->Frame(-width => 50, -height => 10);
 my $box = $frame->Listbox(-width => 50, -height => 10);
 my $scroll = $frame->Scrollbar(-command => ['yview', $box]);
@@ -38,20 +50,8 @@ my $bt_remove = $main->Button("-text" => "Remove",
 				"-width" => "4",
 				"-command" => sub{$box->delete('active')});
 
-my $bt_save = $main->Button("-text" => "Save",
-				"-height" => "1",
-				"-width" => "4",
-				"-command" => \&save_file);
-
-my $bt_end = $main->Button("-text" => "Exit",
-                                 "-height" => "1",
-                                 "-width"  => "4",
-                                 "-command" => sub{ exit;});
-
 $bt_add->pack(-side => 'left');
 $bt_remove->pack(-side => 'left');
-$bt_end->pack(-side => 'right');
-$bt_save->pack(-side =>  'right');
 
 #program logik
 my $conf_file = '';
@@ -62,6 +62,11 @@ if (defined @ARGV){
 		or &cmd_end("Need a config file");
 }
 
+my $folder_pod = "";
+my $file_config = "";
+my $popup_in1 = "";
+my $popup_in2 = "";
+
 &load_file($conf_file);
 
 MainLoop;
@@ -70,12 +75,10 @@ MainLoop;
 sub load_file {
 	my $confile = shift;
 	my $yaml = YAML::LoadFile($confile);
-
-	#chomp $folder;
-	#chomp $logconfig;
-
-	$folder_in->insert(0, $yaml->{dir});
-	$logfile_in->insert(0, $yaml->{logfile});
+	
+	$box->delete(0, 'end');
+	$folder_pod = $yaml->{dir};
+	$file_config = $yaml->{logfile};
 
 	foreach (@{$yaml->{urls}}) {
    	$box->insert('end', $_);
@@ -88,21 +91,47 @@ sub cmd_end {
 	exit;
 }
 
+sub edit_config {
+	my $popup=$main->DialogBox(-title=>"Edit Config", -buttons=>["OK"], -command=>sub{$folder_pod = $popup_in1->get();$file_config=$popup_in2->get();});
+        $popup->add("Label", -text=>"Podcast:")->grid(-row =>0, -column=>0);
+	$popup_in1 =$popup->add("Entry")->grid(-row =>0, -column=>1);
+	$popup_in1->insert('0',$folder_pod);
+	$popup->add("Label", -text=>"Log-File:")->grid(-row =>1, -column=>0);
+	$popup_in2 = $popup->add("Entry")->grid(-row =>1, -column=>1);
+	$popup_in2->insert('0', $file_config);
+        $popup->Show;
+}
+
 sub save_file {
 	my @elements = $box->get(0, 'end');
 	my $hash = {};
-	$hash->{'dir'} = $folder_in->get();
-	$hash->{'logfile'} = $logfile_in->get();
+	$hash->{'dir'} = $folder_pod;
+	$hash->{'logfile'} = $file_config;
 	$hash->{'urls'} = \@elements;
 	YAML::DumpFile($conf_file, $hash);
-	$main->messageBox(-message=>"successfull Saved!");
+	my $popup=$main->DialogBox(-title=>"Save", -buttons=>["OK"],);
+        $popup->add("Label", -text=>"Successfull Saved!")->pack;
+        $popup->Show;
 }
 
 sub eingabe_bearbeiten {
-  my $popup = $main->Toplevel;
-  $popup->Label("-text" => "Neue URL")->pack;
-  my $eingabe = $popup->Entry();
-  $eingabe->pack();
-  $popup->Button("-text" => "Add",
-		 "-command" =>sub{ $box->insert('end', $eingabe->get); $popup->destroy;})->pack;
+	my $popup = $main->Toplevel;
+	$popup->Label("-text" => "Neue URL")->pack;
+	my $eingabe = $popup->Entry();
+	$eingabe->pack();
+	$popup->Button("-text" => "Add",
+		       "-command" =>sub{ $box->insert('end', $eingabe->get); $popup->destroy;})->pack;
 }
+sub about_txt {
+        my $popup=$main->DialogBox(-title=>"ABOUT", -buttons=>["OK"],);
+        $popup->add("Label", -text=>"Pepol URL-Adder\nversion 0.5\nby abakus")->pack;
+        $popup->Show;
+}
+
+sub help_txt {
+        my $popup=$main->DialogBox(-title=>"HELP", -buttons=>["OK"],);
+        $popup->add("Label", -text=>"lol, why do you need help?!\nfor more infos:\njava5\@arcor.de",)->pack;
+        $popup->Show;
+}
+
+
