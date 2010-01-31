@@ -87,8 +87,9 @@ sub load_file {
 
 sub cmd_end {
 	my $anwser = shift;
-	$main->messageBox(-message=>$anwser);
-	exit;
+	my $popup=$main->DialogBox(-title=>"End", -buttons=>["OK"],-command=>sub{exit;});
+        $popup->add("Label", -text=>$anwser)->pack;
+        $popup->Show;
 }
 
 sub edit_config {
