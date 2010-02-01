@@ -75,10 +75,10 @@ $logger->info("Stop pepol\n");
 $dbh->disconnect;
 
 sub connect_db {
-	my $dbh = DBI->connect("DBI:CSV:f_dir=./csvdb")
+	my $dbh = DBI->connect("DBI:CSV:f_dir=$yaml->{'podcastdb'}")
 		or die "Cannot connect: $DBI::errstr";
-	unless (-e File::Spec->catfile("csvdb",$yaml->{'podcastdb'})) {
-		my $sth = $dbh->prepare("CREATE TABLE $yaml->{'podcastdb'} (title VARCHAR(30), channel VARCHAR(30), folder VARCHAR(30), path VARCHAR(60), date VARCHAR(40))");
+	unless (-e File::Spec->catfile($yaml->{'podcastdb'},$yaml->{'dbname'})) {
+		my $sth = $dbh->prepare("CREATE TABLE $yaml->{'dbname'} (title VARCHAR(30), channel VARCHAR(30), folder VARCHAR(30), path VARCHAR(60), date VARCHAR(40))");
 		$sth->execute or die "Cannot execute: " . $sth->errstr ();
 		$sth->finish;
 	}
@@ -88,12 +88,12 @@ sub connect_db {
 sub add_podcast {
 	my ($dbh, $title, $channel, $folder, $path) = @_;
 	my $time = localtime;
-	$dbh->do("INSERT INTO $yaml->{'podcastdb'} VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
+	$dbh->do("INSERT INTO $yaml->{'dbname'} VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
 }
 
 sub in_db{
 	my ($dbh, $title) = @_;
-	my $sth = $dbh->prepare("SELECT title FROM $yaml->{podcastdb} WHERE title=?");
+	my $sth = $dbh->prepare("SELECT title FROM $yaml->{dbname} WHERE title=?");
 	$sth->execute($title);
 	while (my @row = $sth->fetchrow_array) {
 		if ($row[0] eq $title) {
