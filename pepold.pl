@@ -7,6 +7,7 @@ use File::Spec;
 use DBI;
 use YAML qw(LoadFile);
 use Log::Log4perl qw(get_logger);
+use Pepol;
 #Perl program for parsing a podcast and download the pods
 my ($yaml) = YAML::LoadFile("pepol.conf")
 	or die "Could not load Config";
@@ -29,7 +30,7 @@ my $file = "";
 $SIG{INT} = \&catch;
 
 #Initial DB
-my $dbh = &connect_db; 
+my $dbh = Pepol::connect_db($yaml->{podcastdb},$yaml->{dbname}); 
 
 foreach (@{$yaml->{'urls'}}) {
 	chomp;
@@ -56,7 +57,7 @@ foreach (@{$yaml->{'urls'}}) {
 			mkdir($file) unless (-e $file);
 			$file = File::Spec->catfile($file, $&);
 			#print $file."\n";
-			if (&in_db($dbh,$&)) {
+			if (Pepol::in_db($dbh,$yaml->{dbname},$&)) {
 				$logger->debug("File exist: $file\n");
 			} else {
 				$logger->info("Start Download: $file\n");
@@ -72,35 +73,12 @@ foreach (@{$yaml->{'urls'}}) {
 	$logger->info($rss->{channel}->{title}.": ".$count." File(s) downloaded.\n");
 }
 $logger->info("Stop pepol\n");
-$dbh->disconnect;
-
-sub connect_db {
-	my $dbh = DBI->connect("DBI:CSV:f_dir=$yaml->{'podcastdb'}")
-		or die "Cannot connect: $DBI::errstr";
-	unless (-e File::Spec->catfile($yaml->{'podcastdb'},$yaml->{'dbname'})) {
-		my $sth = $dbh->prepare("CREATE TABLE $yaml->{'dbname'} (title VARCHAR(30), channel VARCHAR(30), folder VARCHAR(30), path VARCHAR(60), date VARCHAR(40))");
-		$sth->execute or die "Cannot execute: " . $sth->errstr ();
-		$sth->finish;
-	}
-	return $dbh;
-}
+Pepol::disconnect_db($dbh);
 
 sub add_podcast {
 	my ($dbh, $title, $channel, $folder, $path) = @_;
 	my $time = localtime;
 	$dbh->do("INSERT INTO $yaml->{'dbname'} VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
-}
-
-sub in_db{
-	my ($dbh, $title) = @_;
-	my $sth = $dbh->prepare("SELECT title FROM $yaml->{dbname} WHERE title=?");
-	$sth->execute($title);
-	while (my @row = $sth->fetchrow_array) {
-		if ($row[0] eq $title) {
-			return 1;
-		}
-	}
-	return 0;
 }
 
 sub catch {

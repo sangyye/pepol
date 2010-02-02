@@ -5,6 +5,7 @@ use Tk;
 use Tk::FBox;
 require Tk::Dialog;
 use YAML qw(LoadFile DumpFile);
+use DBI;
 
 local $YAML::UseHeader = 0;
 #Grafische Oberfläche generieren
@@ -62,10 +63,9 @@ if (defined @ARGV){
 		or &cmd_end("Need a config file");
 }
 
-my $folder_pod = "";
-my $file_config = "";
 my $popup_in1 = "";
 my $popup_in2 = "";
+my $yaml;
 
 &load_file($conf_file);
 
@@ -74,11 +74,9 @@ MainLoop;
 #some functions
 sub load_file {
 	my $confile = shift;
-	my $yaml = YAML::LoadFile($confile);
+	$yaml = YAML::LoadFile($confile);
 	
 	$box->delete(0, 'end');
-	$folder_pod = $yaml->{dir};
-	$file_config = $yaml->{logfile};
 
 	foreach (@{$yaml->{urls}}) {
    	$box->insert('end', $_);
@@ -93,22 +91,22 @@ sub cmd_end {
 }
 
 sub edit_config {
-	my $popup=$main->DialogBox(-title=>"Edit Config", -buttons=>["OK","Cancel"], -command=>sub{my $i= shift; if($i eq "OK"){$folder_pod = $popup_in1->get();$file_config=$popup_in2->get();}});
+	my $popup=$main->DialogBox(-title=>"Edit Config", -buttons=>["OK","Cancel"], -command=>sub{my $i= shift; if($i eq "OK"){$yaml->{dir} = $popup_in1->get();$yaml->{logfile}=$popup_in2->get();}});
         $popup->add("Label", -text=>"Podcast:")->grid(-row =>0, -column=>0);
 	$popup_in1 =$popup->add("Entry", -width=>'25')->grid(-row =>0, -column=>1);
-	$popup_in1->insert('0',$folder_pod);
+	$popup_in1->insert('0',$yaml->{dir});
 	$popup->add("Label", -text=>"Log-File:")->grid(-row =>1, -column=>0);
 	$popup_in2 = $popup->add("Entry", -width=>'25')->grid(-row =>1, -column=>1);
-	$popup_in2->insert('0', $file_config);
+	$popup_in2->insert('0', $yaml->{logfile});
         $popup->Show;
 }
 
 sub save_file {
-	my @elements = $box->get(0, 'end');
+	my @urls = $box->get(0, 'end');
 	my $hash = {};
-	$hash->{'dir'} = $folder_pod;
-	$hash->{'logfile'} = $file_config;
-	$hash->{'urls'} = \@elements;
+	$hash->{'dir'} = $yaml->{dir};
+	$hash->{'logfile'} = $yaml->{logfile};
+	$hash->{'urls'} = \@urls;
 	YAML::DumpFile($conf_file, $hash);
 	my $popup=$main->DialogBox(-title=>"Save", -buttons=>["OK"],);
         $popup->add("Label", -text=>"Successfull Saved!")->pack;
@@ -123,6 +121,10 @@ sub eingabe_bearbeiten {
 	$popup->Button("-text" => "Add",
 		       "-command" =>sub{ $box->insert('end', $eingabe->get); $popup->destroy;})->pack;
 }
+#DBI sachen
+
+
+#a little help
 sub about_txt {
         my $popup=$main->DialogBox(-title=>"ABOUT", -buttons=>["OK"],);
         $popup->add("Label", -text=>"Pepol URL-Adder\nversion 0.5\nby abakus")->pack;
