@@ -11,7 +11,6 @@ $VERSION     = 1.00;
 %EXPORT_TAGS = ( DEFAULT => [qw(&connect_db &in_db &disconnect_db)],
                  Both    => [qw(&connect_db &in_db &disconnect_db)]);
 
-
 sub connect_db {
 	my ($podcastdb, $dbname) = @_;
         my $dbh = DBI->connect("DBI:CSV:f_dir=$podcastdb")
