@@ -13,6 +13,9 @@ $VERSION     = 1.00;
 
 sub connect_db {
 	my ($podcastdb, $dbname) = @_;
+	unless (-e $podcastdb){
+		mkdir $podcastdb;
+	}
         my $dbh = DBI->connect("DBI:CSV:f_dir=$podcastdb")
                 or die "Cannot connect: $DBI::errstr";
         unless (-e File::Spec->catfile($podcastdb,$dbname)) {
@@ -27,6 +30,13 @@ sub disconnect_db {
 	my($dbh) = shift;
 	$dbh->disconnect;
 }
+
+sub add_podcast {
+        my ($dbh,$dbname, $title, $channel, $folder, $path) = @_;
+        my $time = localtime;
+        $dbh->do("INSERT INTO $dbname VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
+}
+
 sub in_db{
         my ($dbh,$dbname, $title) = @_;
         my $sth = $dbh->prepare("SELECT title FROM $dbname WHERE title=?");

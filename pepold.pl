@@ -59,12 +59,15 @@ foreach (@{$yaml->{'urls'}}) {
 			#print $file."\n";
 			if (Pepol::in_db($dbh,$yaml->{dbname},$&)) {
 				$logger->debug("File exist: $file\n");
+			} elsif ( -e $file) {
+				Pepol::add_podcast($dbh,$yaml->{dbname}, $&, $title, $lang || "-", $file);
+				 $logger->debug("File add to db: $file\n");
 			} else {
 				$logger->info("Start Download: $file\n");
 				getstore($podcast, $file)
 					or $logger->error("Failed Download: $file\n");
 				$logger->info("Finished Download: $file\n");
-				&add_podcast($dbh, $&, $title, $lang || "-", $file);
+				Pepol::add_podcast($dbh,$yaml->{dbname}, $&, $title, $lang || "-", $file);
 				$file = "";
 				$count++;
 			}
@@ -74,12 +77,6 @@ foreach (@{$yaml->{'urls'}}) {
 }
 $logger->info("Stop pepol\n");
 Pepol::disconnect_db($dbh);
-
-sub add_podcast {
-	my ($dbh, $title, $channel, $folder, $path) = @_;
-	my $time = localtime;
-	$dbh->do("INSERT INTO $yaml->{'dbname'} VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
-}
 
 sub catch {
 	$SIG{INT} = \&catch;
