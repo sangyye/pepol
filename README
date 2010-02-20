@@ -1,0 +1,13 @@
+Pepol
+
+A Perl Podcast Loader
+
+DISCRIPTION
+This Program downloads Podcast and has a YAML-Config file
+You also have a Tk-based Config Program.
+
+AUTHOR
+Christian "abakus" Vervoorts
+
+CONFIG
+set your personal options in pepol.conf

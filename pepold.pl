@@ -4,8 +4,10 @@ use strict;
 use LWP::Simple;
 use XML::RSS;
 use File::Spec;
+use DBI;
 use YAML qw(LoadFile);
 use Log::Log4perl qw(get_logger);
+use Pepol;
 #Perl program for parsing a podcast and download the pods
 my ($yaml) = YAML::LoadFile("pepol.conf")
 	or die "Could not load Config";
@@ -26,6 +28,9 @@ $logger->info("Start pepol\n");
 
 my $file = "";
 $SIG{INT} = \&catch;
+
+#Initial DB
+my $dbh = Pepol::connect_db($yaml->{podcastdb},$yaml->{dbname}); 
 
 foreach (@{$yaml->{'urls'}}) {
 	chomp;
@@ -52,13 +57,14 @@ foreach (@{$yaml->{'urls'}}) {
 			mkdir($file) unless (-e $file);
 			$file = File::Spec->catfile($file, $&);
 			#print $file."\n";
-			if (-e $file) {
+			if (Pepol::in_db($dbh,$yaml->{dbname},$&)) {
 				$logger->debug("File exist: $file\n");
 			} else {
 				$logger->info("Start Download: $file\n");
 				getstore($podcast, $file)
 					or $logger->error("Failed Download: $file\n");
 				$logger->info("Finished Download: $file\n");
+				&add_podcast($dbh, $&, $title, $lang || "-", $file);
 				$file = "";
 				$count++;
 			}
@@ -67,6 +73,13 @@ foreach (@{$yaml->{'urls'}}) {
 	$logger->info($rss->{channel}->{title}.": ".$count." File(s) downloaded.\n");
 }
 $logger->info("Stop pepol\n");
+Pepol::disconnect_db($dbh);
+
+sub add_podcast {
+	my ($dbh, $title, $channel, $folder, $path) = @_;
+	my $time = localtime;
+	$dbh->do("INSERT INTO $yaml->{'dbname'} VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
+}
 
 sub catch {
 	$SIG{INT} = \&catch;
