@@ -17,29 +17,46 @@ sub new {
 	};
 	bless $self, $class;
 	
+	$self->{dsn} = "DBI:CSV:f_dir=$self->{podcastdb}";
+    	
+	if(! -f File::Spec->catfile($self->{podcastdb},$self->{dbname})) {
+        	$self->db_init();
+    	}
+
 	if(! $self->{dbh} ) {
-		$self->{dbh} = $self->connect_db();
+		$self->{dbh} = $self->dbh();
 	}
 	
 	return $self;
 }
 
 ###########################################
-sub connect_db {
+sub dbh {
+###########################################
+    my($self) = @_;
+ 
+    if(! $self->{dbh} ) {
+        $self->{dbh} = DBI->connect($self->{dsn});
+    }
+ 
+    return $self->{dbh};
+}
+
+###########################################
+sub db_init {
 ###########################################
 	my ($self) = @_;
 	my ($podcastdb, $dbname) = ($self->{podcastdb}, $self->{dbname});
 	unless (-e $podcastdb){
 		mkdir $podcastdb;
 	}
-        my $dbh = DBI->connect("DBI:CSV:f_dir=$podcastdb")
+        my $dbh = $self->dbh()
                 or die "Cannot connect: $DBI::errstr";
-        unless (-e File::Spec->catfile($podcastdb,$dbname)) {
-                my $sth = $dbh->prepare("CREATE TABLE $dbname (title VARCHAR(30), channel VARCHAR(30), folder VARCHAR(30), path VARCHAR(60), date VARCHAR(40))");
-                $sth->execute or die "Cannot execute: " . $sth->errstr ();
-                $sth->finish;
-        }
-        return $dbh;
+        my $sth = $dbh->prepare("CREATE TABLE $dbname (title VARCHAR(30), channel VARCHAR(30), folder VARCHAR(30), path VARCHAR(60), date VARCHAR(40))");
+        $sth->execute or die "Cannot execute: " . $sth->errstr ();
+        $sth->finish;
+
+        return 1;
 }
 
 ###########################################
