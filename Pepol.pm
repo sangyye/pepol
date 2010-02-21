@@ -2,6 +2,7 @@ package Pepol;
 use strict;
 use Exporter;
 use DBI;
+use File::Spec;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
