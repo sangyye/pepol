@@ -1,19 +1,34 @@
 package Pepol;
+###########################################
 use strict;
-use Exporter;
+use warnings;
 use DBI;
 use File::Spec;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-$VERSION     = 1.00;
-@ISA         = qw(Exporter);
-@EXPORT      = ();
-@EXPORT_OK   = qw(connect_db in_db disconnect_db);
-%EXPORT_TAGS = ( DEFAULT => [qw(&connect_db &in_db &disconnect_db)],
-                 Both    => [qw(&connect_db &in_db &disconnect_db)]);
+our $VERSION = "0.6";
 
+###########################################
+sub new {
+###########################################
+	my($class, %options) = @_;
+	
+	my $self = {
+		%options,
+	};
+	bless $self, $class;
+	
+	if(! $self->{dbh} ) {
+		$self->{dbh} = $self->connect_db();
+	}
+	
+	return $self;
+}
+
+###########################################
 sub connect_db {
-	my ($podcastdb, $dbname) = @_;
+###########################################
+	my ($self) = @_;
+	my ($podcastdb, $dbname) = ($self->{podcastdb}, $self->{dbname});
 	unless (-e $podcastdb){
 		mkdir $podcastdb;
 	}
@@ -32,15 +47,20 @@ sub disconnect_db {
 	$dbh->disconnect;
 }
 
+###########################################
 sub add_podcast {
-        my ($dbh,$dbname, $title, $channel, $folder, $path) = @_;
+###########################################
+        my ($self, $title, $channel, $folder, $path) = @_;
         my $time = localtime;
-        $dbh->do("INSERT INTO $dbname VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
+        my $dbh = $self->{dbh};
+	$dbh->do("INSERT INTO $self->{dbname} VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
 }
 
+###########################################
 sub in_db{
-        my ($dbh,$dbname, $title) = @_;
-        my $sth = $dbh->prepare("SELECT title FROM $dbname WHERE title=?");
+###########################################
+        my ($self, $title) = @_;
+        my $sth = $self->{dbh}->prepare("SELECT title FROM $self->{dbname} WHERE title=?");
         $sth->execute($title);
         while (my @row = $sth->fetchrow_array) {
                 if ($row[0] eq $title) {

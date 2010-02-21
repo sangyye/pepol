@@ -30,7 +30,10 @@ my $file = "";
 $SIG{INT} = \&catch;
 
 #Initial DB
-my $dbh = Pepol::connect_db($yaml->{podcastdb},$yaml->{dbname}); 
+my $pepol = Pepol->new(
+	podcastdb => $yaml->{podcastdb},
+	dbname =>$yaml->{dbname}
+); 
 
 foreach (@{$yaml->{'urls'}}) {
 	chomp;
