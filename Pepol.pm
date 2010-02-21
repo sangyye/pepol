@@ -42,11 +42,6 @@ sub connect_db {
         return $dbh;
 }
 
-sub disconnect_db {
-	my($dbh) = shift;
-	$dbh->disconnect;
-}
-
 ###########################################
 sub add_podcast {
 ###########################################
