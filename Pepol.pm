@@ -69,17 +69,24 @@ sub add_podcast {
 }
 
 ###########################################
-sub in_db{
+sub in_db {
 ###########################################
         my ($self, $title) = @_;
-        my $sth = $self->{dbh}->prepare("SELECT title FROM $self->{dbname} WHERE title=?");
-        $sth->execute($title);
-        while (my @row = $sth->fetchrow_array) {
+        while (my @row = $self->get_podcast($title)) {
                 if ($row[0] eq $title) {
                         return 1;
                 }
         }
         return 0;
+}
+
+###########################################
+sub get_podcast {
+###########################################
+	my ($self, $title) = @_;
+	my $sth = $self->{dbh}->prepare("SELECT * FROM $self->{dbname} WHERE title=?");
+	$sth->execute($title);
+	return $sth->fetchrow_array;
 }
 
 1;
