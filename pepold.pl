@@ -4,7 +4,6 @@ use strict;
 use LWP::Simple;
 use XML::RSS;
 use File::Spec;
-use DBI;
 use YAML qw(LoadFile);
 use Log::Log4perl qw(get_logger);
 use Pepol;
@@ -29,11 +28,11 @@ $logger->info("Start pepol\n");
 my $file = "";
 $SIG{INT} = \&catch;
 
-#Initial DB
+#Initial Pepol
 my $pepol = Pepol->new(
-	podcastdb => $yaml->{podcastdb},
-	dbname =>$yaml->{dbname}
-); 
+        podcastdb => $yaml->{podcastdb},
+        dbname => $yaml->{dbname}
+);
 
 foreach (@{$yaml->{'urls'}}) {
 	chomp;
@@ -47,7 +46,7 @@ foreach (@{$yaml->{'urls'}}) {
 	$rss->parse($content);
 	my $count = 0;
 	my $title = $rss->{channel}->{title};
-	foreach my $item (@{$rss->{'items'}}) {
+	foreach my $item (reverse @{$rss->{'items'}}) {
 		my $podcast = $item->{'enclosure'}->{'url'};
 		if($podcast =~ /\w+\.\w+$/) {
 			if (defined($lang) and $lang gt "") {
@@ -60,17 +59,17 @@ foreach (@{$yaml->{'urls'}}) {
 			mkdir($file) unless (-e $file);
 			$file = File::Spec->catfile($file, $&);
 			#print $file."\n";
-			if (Pepol::in_db($dbh,$yaml->{dbname},$&)) {
+			if ($pepol->in_db($&)) {
 				$logger->debug("File exist: $file\n");
 			} elsif ( -e $file) {
-				Pepol::add_podcast($dbh,$yaml->{dbname}, $&, $title, $lang || "-", $file);
+				$pepol->add_podcast($&, $title, $lang || "-", $file);
 				 $logger->debug("File add to db: $file\n");
 			} else {
 				$logger->info("Start Download: $file\n");
 				getstore($podcast, $file)
 					or $logger->error("Failed Download: $file\n");
 				$logger->info("Finished Download: $file\n");
-				Pepol::add_podcast($dbh,$yaml->{dbname}, $&, $title, $lang || "-", $file);
+				$pepol->add_podcast($&, $title, $lang || "-", $file);
 				$file = "";
 				$count++;
 			}
@@ -79,7 +78,6 @@ foreach (@{$yaml->{'urls'}}) {
 	$logger->info($rss->{channel}->{title}.": ".$count." File(s) downloaded.\n");
 }
 $logger->info("Stop pepol\n");
-Pepol::disconnect_db($dbh);
 
 sub catch {
 	$SIG{INT} = \&catch;
