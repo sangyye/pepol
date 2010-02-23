@@ -81,6 +81,19 @@ sub in_db {
 }
 
 ###########################################
+sub get_all {
+###########################################
+	my ($self) = @_;
+	my @array = ();
+	my $sth = $self->{dbh}->prepare("SELECT * FROM $self->{dbname}");
+	$sth->execute();
+	while (my @row = $sth->fetchrow_array) {
+		push @array, \@row;
+	}
+	return @array;
+}
+
+###########################################
 sub get_podcast {
 ###########################################
 	my ($self, $title) = @_;
