@@ -5,7 +5,6 @@ use Tk;
 use Tk::FBox;
 require Tk::Dialog;
 use YAML qw(LoadFile DumpFile);
-use DBI;
 
 local $YAML::UseHeader = 0;
 #Grafische Oberfläche generieren
