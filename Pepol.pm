@@ -62,8 +62,8 @@ sub db_init {
 ###########################################
 sub add_podcast {
 ###########################################
-        my ($self, $title, $channel, $folder, $path) = @_;
-        my $time = localtime;
+        my ($self, $title, $channel, $folder, $path, $time) = @_;
+        $time = time unless $time;
         my $dbh = $self->{dbh};
 	$dbh->do("INSERT INTO $self->{dbname} VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
 }

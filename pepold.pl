@@ -62,8 +62,9 @@ foreach (@{$yaml->{'urls'}}) {
 			if ($pepol->in_db($&)) {
 				$logger->debug("File exist: $file\n");
 			} elsif ( -e $file) {
-				$pepol->add_podcast($&, $title, $lang || "-", $file);
-				 $logger->debug("File add to db: $file\n");
+				my @fstat = stat $file;
+				$pepol->add_podcast($&, $title, $lang || "-", $file, $fstat[9]);
+				$logger->debug("File add to db: $file\n");
 			} else {
 				$logger->info("Start Download: $file\n");
 				getstore($podcast, $file)
