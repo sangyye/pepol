@@ -20,7 +20,7 @@ sub new {
     $self->{dsn} = "dbi:SQLite:dbname=$self->{podcastdb}";
         
     if(! -f $self->{podcastdb}) {
-            $self->db_init();
+        $self->db_init();
     }
 
     if(! $self->{dbh} ) {
