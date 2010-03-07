@@ -5,6 +5,7 @@ A Perl Podcast Loader
 DISCRIPTION
 This Program downloads Podcast and has a YAML-Config file
 You also have a Tk-based Config Program.
+Podcasts download are save in a sqlite-file
 
 AUTHOR
 Christian "abakus" Vervoorts
