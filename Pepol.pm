@@ -10,24 +10,24 @@ our $VERSION = "0.6";
 ###########################################
 sub new {
 ###########################################
-	my($class, %options) = @_;
-	
-	my $self = {
-		%options,
-	};
-	bless $self, $class;
-	
-	$self->{dsn} = "DBI:CSV:f_dir=$self->{podcastdb}";
-    	
-	if(! -f File::Spec->catfile($self->{podcastdb},$self->{dbname})) {
-        	$self->db_init();
-    	}
+    my($class, %options) = @_;
+    
+    my $self = {
+        %options,
+    };
+    bless $self, $class;
+    
+    $self->{dsn} = "dbi:SQLite:dbname=$self->{podcastdb}";
+        
+    if(! -f $self->{podcastdb}) {
+            $self->db_init();
+    }
 
-	if(! $self->{dbh} ) {
-		$self->{dbh} = $self->dbh();
-	}
-	
-	return $self;
+    if(! $self->{dbh} ) {
+        $self->{dbh} = $self->dbh();
+    }
+    
+    return $self;
 }
 
 ###########################################
@@ -36,7 +36,7 @@ sub dbh {
     my($self) = @_;
  
     if(! $self->{dbh} ) {
-        $self->{dbh} = DBI->connect($self->{dsn});
+        $self->{dbh} = DBI->connect($self->{dsn}, "", "");
     }
  
     return $self->{dbh};
@@ -45,27 +45,21 @@ sub dbh {
 ###########################################
 sub db_init {
 ###########################################
-	my ($self) = @_;
-	my ($podcastdb, $dbname) = ($self->{podcastdb}, $self->{dbname});
-	unless (-e $podcastdb){
-		mkdir $podcastdb;
-	}
-        my $dbh = $self->dbh()
-                or die "Cannot connect: $DBI::errstr";
-        my $sth = $dbh->prepare("CREATE TABLE $dbname (title VARCHAR(30), channel VARCHAR(30), folder VARCHAR(30), path VARCHAR(60), date VARCHAR(40))");
-        $sth->execute or die "Cannot execute: " . $sth->errstr ();
-        $sth->finish;
-
-        return 1;
+    my ($self) = @_;
+    
+    my $dbh = $self->dbh()
+            or die "Cannot connect: $DBI::errstr";
+    my $sth = $dbh->do("CREATE TABLE podcasts (title TEXT, channel TEXT, folder TEXT, path TEXT, date TEXT)");
+    return 1;
 }
 
 ###########################################
 sub add_podcast {
 ###########################################
-        my ($self, $title, $channel, $folder, $path, $time) = @_;
-        $time = time unless $time;
-        my $dbh = $self->{dbh};
-	$dbh->do("INSERT INTO $self->{dbname} VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
+    my ($self, $title, $channel, $folder, $path, $time) = @_;
+    $time = time unless $time;
+    my $dbh = $self->{dbh};
+    $dbh->do("INSERT INTO podcasts VALUES (?,?,?,?,?)", undef, $title, $channel, $folder, $path, $time);
 }
 
 ###########################################
@@ -83,23 +77,23 @@ sub in_db {
 ###########################################
 sub get_all {
 ###########################################
-	my ($self) = @_;
-	my @array = ();
-	my $sth = $self->{dbh}->prepare("SELECT * FROM $self->{dbname}");
-	$sth->execute();
-	while (my @row = $sth->fetchrow_array) {
-		push @array, \@row;
-	}
-	return @array;
+    my ($self) = @_;
+    my @array = ();
+    my $sth = $self->{dbh}->prepare("SELECT * FROM podcasts");
+    $sth->execute();
+    while (my @row = $sth->fetchrow_array) {
+        push @array, \@row;
+    }
+    return @array;
 }
 
 ###########################################
 sub get_podcast {
 ###########################################
-	my ($self, $title) = @_;
-	my $sth = $self->{dbh}->prepare("SELECT * FROM $self->{dbname} WHERE title=?");
-	$sth->execute($title);
-	return $sth->fetchrow_array;
+    my ($self, $title) = @_;
+    my $sth = $self->{dbh}->prepare("SELECT * FROM podcasts WHERE title=?");
+    $sth->execute($title);
+    return $sth->fetchrow_array;
 }
 
 1;
