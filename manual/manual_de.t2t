@@ -1,0 +1,18 @@
+pepol - The Perl Podcast Loader
+Version0.1
+
+Einleitung
+
+Die Idee hinter der peplo ist das die Podcast in einem festem Intervall und ohne menschliches zutun heruntergeladen werden.
+Die Konfiguration erfolgt über einen Textdatei in der die Urls der Podcast eingetragen werden können.
+
+Installtion
+
+Linux
+
+Da peplo in Perl geschrieben ist, ist die Installtion sehr einfach.Folgende module müssen über das CPAN nach installiert werden. Wir legen einfach ein verzeichniss an (z.B. /usr/local/peplo). Dort speichern wir dann den skript und die Config. Dann legen wir einen neuen user an (z.b. useradd peplo), dies soll verhindern das der skript daten beschädigt.
+Nun müssen wir nur noch die crontab bearbeiten (als root crontab -e) und fügen dort den skript ein (in unserem Beispiel /usr/local/peplo/peplo.pl) mit dem gewählten benutzer (in userem Fall peplo).
+Wichtig: der benutzer peplo muss rechte haben an dem verzeichniss in dem er liegt und an dem verzeichniss in dem er die podcast kopieren soll.
+Dann nache einer bearbeitung der config datei (die für pepol nur lesabr sein muss) und das hinzufügen neuer podcasts ist peplo einsatz bereit.
+
+Windows
